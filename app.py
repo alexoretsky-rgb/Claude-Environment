@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 POSTS_FILE = os.path.join(os.path.dirname(__file__), "posts.json")
 
-SMTP_SERVER = "smtp.office365.com"
+SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
