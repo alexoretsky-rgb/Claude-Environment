@@ -50,7 +50,11 @@ def send_email():
         f"{post}"
     )
 
-    payload = json.dumps({"email": email, "body": body}).encode("utf-8")
+    payload = json.dumps({
+        "recipients": [{"emailAddress": {"address": email}}],
+        "email": email,
+        "body": body
+    }).encode("utf-8")
 
     try:
         req = urllib.request.Request(
