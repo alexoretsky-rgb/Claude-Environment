@@ -1,16 +1,13 @@
 import json
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import urllib.request
 from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
 POSTS_FILE = os.path.join(os.path.dirname(__file__), "posts.json")
 
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+MAKE_WEBHOOK_URL = "https://hook.us2.make.com/cu277bjgm47xwcrv1u597pnl7xyxf2ry"
 
 
 def load_posts():
@@ -44,16 +41,6 @@ def send_email():
     if not name or not email or not post:
         return jsonify({"error": "Missing required fields"}), 400
 
-    sender_email = os.environ.get("OUTLOOK_EMAIL")
-    sender_password = os.environ.get("OUTLOOK_APP_PASSWORD")
-
-    if not sender_email or not sender_password:
-        return jsonify({
-            "error": "Server is missing OUTLOOK_EMAIL or OUTLOOK_APP_PASSWORD environment variables."
-        }), 500
-
-    subject = "Your LinkedIn Post for Review"
-
     body = (
         f"Hi {name},\n\n"
         "Below is your LinkedIn post draft for review. Please feel free to reach out if you would "
@@ -63,26 +50,20 @@ def send_email():
         f"{post}"
     )
 
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    payload = json.dumps({"email": email, "body": body}).encode("utf-8")
 
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, email, msg.as_string())
+        req = urllib.request.Request(
+            MAKE_WEBHOOK_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            resp.read()
         return jsonify({"success": True})
-    except smtplib.SMTPAuthenticationError:
-        return jsonify({
-            "error": "Authentication failed. Check your OUTLOOK_EMAIL and OUTLOOK_APP_PASSWORD."
-        }), 401
-    except smtplib.SMTPException as e:
-        return jsonify({"error": f"Failed to send email: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Failed to send: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
