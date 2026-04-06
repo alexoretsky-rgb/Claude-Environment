@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>accesso — Market Intelligence Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #0a5fa8;
+      --blue-lt: #e8f1fa;
+      --green:   #1a7a4a;
+      --green-lt:#e6f4ee;
+      --amber:   #b45309;
+      --amber-lt:#fef3c7;
+      --red:     #c0392b;
+      --red-lt:  #fdecea;
+      --gray:    #6b7280;
+      --border:  #e5e7eb;
+      --card-bg: #ffffff;
+      --body-bg: #f3f4f6;
+      --text:    #111827;
+      --text-sm: #4b5563;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--body-bg);
+      color: var(--text);
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    header .subtitle { font-size: 0.82rem; opacity: 0.8; margin-top: 2px; }
+    .nav-links { display: flex; gap: 16px; }
+    .nav-links a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── Main layout ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .stat-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray); }
+    .stat-card .value { font-size: 1.75rem; font-weight: 700; margin-top: 4px; color: var(--blue); }
+    .stat-card .sub { font-size: 0.75rem; color: var(--text-sm); margin-top: 2px; }
+
+    /* ── Section layout ── */
+    .section { margin-bottom: 36px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--blue-lt);
+      color: var(--blue);
+    }
+
+    /* ── Summary block ── */
+    .summary-block {
+      background: var(--card-bg);
+      border-left: 4px solid var(--blue);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      line-height: 1.7;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .report-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    /* ── Cards grid ── */
+    .cards-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .cards-grid.two-col { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+    .cards-grid.one-col { grid-template-columns: 1fr; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border: 1px solid var(--border);
+    }
+    .card-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .card-body { font-size: 0.85rem; line-height: 1.6; color: var(--text-sm); }
+    .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    /* ── Badges / tags ── */
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: capitalize;
+    }
+    .badge-blue   { background: var(--blue-lt);  color: var(--blue); }
+    .badge-green  { background: var(--green-lt); color: var(--green); }
+    .badge-amber  { background: var(--amber-lt); color: var(--amber); }
+    .badge-red    { background: var(--red-lt);   color: var(--red); }
+    .badge-gray   { background: #f3f4f6;         color: var(--gray); }
+
+    /* ── Priority indicators ── */
+    .priority-urgent { border-left: 4px solid var(--red);   }
+    .priority-high   { border-left: 4px solid var(--amber); }
+    .priority-medium { border-left: 4px solid var(--blue);  }
+
+    /* ── Severity / momentum ── */
+    .severity-critical { color: var(--red);   font-weight: 700; }
+    .severity-high     { color: var(--amber); font-weight: 600; }
+    .severity-medium   { color: var(--blue);  font-weight: 600; }
+    .severity-low      { color: var(--gray); }
+
+    /* ── Quote callout ── */
+    .quote {
+      border-left: 3px solid var(--border);
+      padding: 6px 12px;
+      margin-top: 8px;
+      font-style: italic;
+      color: var(--text-sm);
+      font-size: 0.83rem;
+    }
+
+    /* ── Action note ── */
+    .action-note {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      background: var(--green-lt);
+      color: var(--green);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* ── Source pills ── */
+    .source-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .pill {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--card-bg);
+      transition: all 0.15s;
+    }
+    .pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .pill:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Signals table ── */
+    .signals-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    th {
+      background: #f9fafb;
+      text-align: left;
+      padding: 10px 12px;
+      font-weight: 600;
+      color: var(--gray);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-sm);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+    td a { color: var(--blue); text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+
+    /* ── Run trigger ── */
+    .run-panel {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .run-panel h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+    .run-panel p { font-size: 0.83rem; color: var(--text-sm); line-height: 1.5; }
+    .run-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-secondary { background: #f3f4f6; color: var(--text); }
+    .run-status {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .run-status.success { background: var(--green-lt); color: var(--green); display: block; }
+    .run-status.error   { background: var(--red-lt);   color: var(--red);   display: block; }
+
+    /* ── Empty / loading states ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .loading { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ── Scrollable lists ── */
+    .scroll-list { max-height: 480px; overflow-y: auto; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 18px; }
+    .tab {
+      padding: 8px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      color: var(--gray);
+      border: 1px solid transparent;
+      border-bottom: none;
+      margin-bottom: -2px;
+      background: transparent;
+    }
+    .tab.active {
+      color: var(--blue);
+      background: var(--card-bg);
+      border-color: var(--border);
+      border-bottom-color: var(--card-bg);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>accesso Market Intelligence</h1>
+    <div class="subtitle">Social listening &amp; competitive intelligence dashboard</div>
+  </div>
+  <nav class="nav-links">
+    <a href="/">LinkedIn Post Reviewer</a>
+    <a href="/social" style="background:rgba(255,255,255,0.2)">Intelligence Dashboard</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card loading">
+      <div class="label">Total Signals</div>
+      <div class="value" id="stat-total">—</div>
+      <div class="sub">collected to date</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Relevant Signals</div>
+      <div class="value" id="stat-relevant">—</div>
+      <div class="sub">passed AI filter</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Reports Generated</div>
+      <div class="value" id="stat-reports">—</div>
+      <div class="sub">intelligence briefings</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Last Run</div>
+      <div class="value" id="stat-last-run" style="font-size:1rem">—</div>
+      <div class="sub" id="stat-last-run-status"></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Sources Active</div>
+      <div class="value" id="stat-sources">—</div>
+      <div class="sub">Reddit, RSS, YouTube, Web</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('report')">Intelligence Report</button>
+    <button class="tab" onclick="switchTab('signals')">Raw Signals</button>
+    <button class="tab" onclick="switchTab('run')">Run Agent</button>
+  </div>
+
+  <!-- ── TAB: Intelligence Report ── -->
+  <div class="tab-panel active" id="tab-report">
+
+    <div id="report-container">
+      <div class="empty-state loading">
+        <div class="icon">⏳</div>
+        <div>Loading latest intelligence report...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB: Raw Signals ── -->
+  <div class="tab-panel" id="tab-signals">
+    <div class="section">
+      <div class="source-pills" id="source-filter">
+        <div class="pill active" data-source="">All Sources</div>
+        <div class="pill" data-source="reddit">Reddit</div>
+        <div class="pill" data-source="rss">RSS / Publications</div>
+        <div class="pill" data-source="youtube">YouTube</div>
+        <div class="pill" data-source="web_search">Web Search</div>
+      </div>
+      <div class="card">
+        <div class="signals-table-wrap">
+          <table id="signals-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Title</th>
+                <th>Body Preview</th>
+                <th>Published</th>
+                <th>Relevance</th>
+              </tr>
+            </thead>
+            <tbody id="signals-body">
+              <tr><td colspan="5"><div class="empty-state loading">Loading signals...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Run Agent ── -->
+  <div class="tab-panel" id="tab-run">
+    <div class="section">
+      <div class="run-panel">
+        <div style="flex:1">
+          <h3>Trigger Intelligence Run</h3>
+          <p>Start a collection and analysis pipeline from the dashboard. The agent will collect signals from selected sources, score them for relevance, extract pain points and themes, identify competitor mentions, and generate a fresh intelligence report.</p>
+          <p style="margin-top:8px"><strong>Note:</strong> Requires <code>ANTHROPIC_API_KEY</code> set on the server. Full runs take 5–20 minutes depending on sources enabled.</p>
+          <div class="run-controls">
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <input type="checkbox" id="src-reddit" checked> Reddit
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <input type="checkbox" id="src-rss" checked> RSS Feeds
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <input type="checkbox" id="src-youtube" checked> YouTube
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <input type="checkbox" id="src-web" checked> Web Search
+            </label>
+          </div>
+          <div class="run-controls">
+            <button class="btn btn-primary" onclick="triggerRun('run')">Run Full Pipeline</button>
+            <button class="btn btn-secondary" onclick="triggerRun('collect')">Collect Only</button>
+            <button class="btn btn-secondary" onclick="triggerRun('report')">Regenerate Report</button>
+          </div>
+          <div class="run-status" id="run-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Recent Runs</span>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Started</th><th>Status</th><th>Signals Collected</th><th>Relevant</th>
+            </tr>
+          </thead>
+          <tbody id="runs-body">
+            <tr><td colspan="5" class="loading" style="text-align:center;padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Cron Schedule (Recommended)</span>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p style="margin-bottom:8px">Add to crontab for weekly automated runs:</p>
+          <pre style="background:#f3f4f6;padding:12px;border-radius:6px;font-size:0.8rem;overflow-x:auto">
+# Monday 6 AM UTC — full pipeline
+0 6 * * 1 cd /path/to/project &amp;&amp; ANTHROPIC_API_KEY=your-key YOUTUBE_API_KEY=your-key \
+    python run_social_listening.py run >> logs/social_listening.log 2>&amp;1
+
+# Daily 8 AM UTC — collect only (lightweight, no AI cost)
+0 8 * * * cd /path/to/project &amp;&amp; \
+    python run_social_listening.py collect --sources reddit,rss >> logs/collect.log 2>&amp;1
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const panels = ['report', 'signals', 'run'];
+    t.classList.toggle('active', panels[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `tab-${name}`);
+  });
+  if (name === 'signals') loadSignals();
+  if (name === 'run') loadRuns();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/api/social/stats');
+    const data = await res.json();
+    if (!res.ok) return;
+
+    document.getElementById('stat-total').textContent = data.total_signals ?? '—';
+    document.getElementById('stat-relevant').textContent = data.relevant_signals ?? '—';
+    document.getElementById('stat-reports').textContent = data.total_reports ?? '—';
+    document.getElementById('stat-sources').textContent =
+      Object.keys(data.signals_by_source || {}).length;
+
+    if (data.last_run) {
+      const d = new Date(data.last_run.started_at);
+      document.getElementById('stat-last-run').textContent = d.toLocaleDateString();
+      document.getElementById('stat-last-run-status').textContent = data.last_run.status;
+    }
+  } catch (e) {
+    console.error('Stats load error', e);
+  }
+}
+
+// ── Report rendering ───────────────────────────────────────────────────────────
+async function loadReport() {
+  const container = document.getElementById('report-container');
+  try {
+    const res = await fetch('/api/social/report');
+    const data = await res.json();
+
+    if (!res.ok) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📡</div>
+          <div><strong>No report yet.</strong></div>
+          <div style="margin-top:8px">Run the agent to generate your first intelligence briefing:</div>
+          <div style="margin-top:12px;font-family:monospace;background:#f3f4f6;padding:10px 16px;border-radius:6px;font-size:0.83rem">
+            python run_social_listening.py run
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = renderReport(data);
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><div>Error loading report: ${e.message}</div></div>`;
+  }
+}
+
+function renderReport(r) {
+  const sigCount = r.signal_count ?? 0;
+  const genDate = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+
+  const painHtml = (r.pain_points || []).map(pp => `
+    <div class="card">
+      <div class="card-title">${escHtml(pp.pain_point || '')}</div>
+      <div class="card-body">
+        ${pp.operator_quote ? `<div class="quote">"${escHtml(pp.operator_quote)}"</div>` : ''}
+        ${pp.accesso_relevance ? `<div style="margin-top:8px;font-size:0.82rem">${escHtml(pp.accesso_relevance)}</div>` : ''}
+        ${pp.suggested_action ? `<div class="action-note">→ ${escHtml(pp.suggested_action)}</div>` : ''}
+      </div>
+      <div class="card-meta">
+        ${badge(pp.category, 'blue')}
+        ${badge(pp.market_segment, 'gray')}
+        <span class="badge severity-${pp.severity}">${pp.severity || ''}</span>
+      </div>
+    </div>`).join('');
+
+  const themeHtml = (r.themes || []).map(t => `
+    <div class="card">
+      <div class="card-title">${escHtml(t.theme || '')}
+        <span style="margin-left:8px;font-size:0.75rem;font-weight:600;color:${momentumColor(t.momentum)}">
+          ${t.momentum === 'rising' ? '↑' : t.momentum === 'declining' ? '↓' : '→'} ${t.momentum || ''}
+        </span>
+      </div>
+      <div class="card-body">${escHtml(t.description || '')}</div>
+      ${(t.example_quotes || []).length ? `
+        <div style="margin-top:8px">
+          ${t.example_quotes.map(q => `<div class="quote">"${escHtml(q)}"</div>`).join('')}
+        </div>` : ''}
+      ${t.accesso_angle ? `<div class="action-note">→ ${escHtml(t.accesso_angle)}</div>` : ''}
+    </div>`).join('');
+
+  const competitorHtml = (r.competitor_insights || []).map(c => `
+    <div class="card">
+      <div class="card-title">${escHtml(c.competitor || '')}
+        <span class="badge ${sentimentBadge(c.mention_type)}" style="margin-left:8px">${c.mention_type || ''}</span>
+      </div>
+      <div class="card-body">${escHtml(c.context || '')}</div>
+      ${c.verbatim_quote ? `<div class="quote">"${escHtml(c.verbatim_quote)}"</div>` : ''}
+      ${c.competitive_insight ? `<div class="action-note">→ ${escHtml(c.competitive_insight)}</div>` : ''}
+    </div>`).join('');
+
+  const langHtml = (r.prospect_language || []).map(l => `
+    <div class="card">
+      <div class="card-title" style="font-style:italic">"${escHtml(l.phrase || '')}"</div>
+      <div class="card-body">
+        <div>${escHtml(l.operator_voice || '')}</div>
+        ${l.messaging_opportunity ? `<div class="action-note">→ ${escHtml(l.messaging_opportunity)}</div>` : ''}
+      </div>
+      <div class="card-meta">
+        ${badge(l.category, 'blue')}
+        ${badge(l.channel, 'green')}
+      </div>
+    </div>`).join('');
+
+  const oppHtml = (r.opportunities || []).map(o => `
+    <div class="card priority-${o.priority || 'medium'}">
+      <div class="card-title">${escHtml(o.title || '')}
+        <span class="badge badge-${o.priority === 'urgent' ? 'red' : o.priority === 'high' ? 'amber' : 'blue'}" style="margin-left:8px">
+          ${o.priority || ''}
+        </span>
+      </div>
+      <div class="card-body">
+        <div><strong>Type:</strong> ${escHtml(o.opportunity_type || '')}</div>
+        <div style="margin-top:6px">${escHtml(o.description || '')}</div>
+        ${o.suggested_angle ? `<div style="margin-top:6px"><strong>Angle:</strong> ${escHtml(o.suggested_angle)}</div>` : ''}
+        ${o.target_audience ? `<div style="margin-top:4px;font-size:0.8rem;color:var(--gray)">For: ${escHtml(o.target_audience)}</div>` : ''}
+        ${o.next_step ? `<div class="action-note">Next step: ${escHtml(o.next_step)}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="section">
+      <div class="report-title">${escHtml(r.title || '')}</div>
+      <div class="summary-block">${escHtml(r.summary || '')}</div>
+      <div style="font-size:0.75rem;color:var(--gray);margin-top:8px">
+        Generated: ${genDate} | Signals analyzed: ${sigCount}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Content &amp; Campaign Opportunities</span>
+        <span class="section-badge">${(r.opportunities || []).length} opportunities</span>
+      </div>
+      <div class="cards-grid two-col">${oppHtml || '<div class="empty-state">No opportunities yet.</div>'}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Operator Pain Points</span>
+        <span class="section-badge">${(r.pain_points || []).length} identified</span>
+      </div>
+      <div class="cards-grid two-col">${painHtml || '<div class="empty-state">No pain points extracted.</div>'}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Emerging Themes</span>
+        <span class="section-badge">${(r.themes || []).length} themes</span>
+      </div>
+      <div class="cards-grid two-col">${themeHtml || '<div class="empty-state">No themes extracted.</div>'}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Competitor Intelligence</span>
+        <span class="section-badge">${(r.competitor_insights || []).length} mentions</span>
+      </div>
+      <div class="cards-grid two-col">${competitorHtml || '<div class="empty-state">No competitor mentions found.</div>'}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Prospect Language Patterns</span>
+        <span class="section-badge">${(r.prospect_language || []).length} patterns</span>
+      </div>
+      <div class="cards-grid two-col">${langHtml || '<div class="empty-state">No language patterns extracted.</div>'}</div>
+    </div>
+  `;
+}
+
+// ── Signals tab ────────────────────────────────────────────────────────────────
+let currentSource = '';
+async function loadSignals(source) {
+  if (source !== undefined) currentSource = source;
+  const tbody = document.getElementById('signals-body');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading" style="text-align:center;padding:20px">Loading...</td></tr>';
+
+  try {
+    const url = `/api/social/signals?days=14&limit=100${currentSource ? `&source=${currentSource}` : ''}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!res.ok || !data.signals?.length) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No signals found. Run a collection first.</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.signals.map(s => `
+      <tr>
+        <td><span class="badge badge-blue">${escHtml(s.source)}</span></td>
+        <td>${s.url ? `<a href="${escHtml(s.url)}" target="_blank">${escHtml((s.title || '').slice(0, 80))}</a>` : escHtml((s.title || '').slice(0, 80))}</td>
+        <td>${escHtml((s.body || '').slice(0, 120))}…</td>
+        <td style="white-space:nowrap;font-size:0.78rem">${(s.published_at || '').slice(0, 10)}</td>
+        <td>
+          ${s.relevance_score != null
+            ? `<span class="badge ${s.relevance_score >= 0.7 ? 'badge-green' : s.relevance_score >= 0.4 ? 'badge-amber' : 'badge-gray'}">
+                ${(s.relevance_score * 100).toFixed(0)}%
+               </span>`
+            : '<span style="color:var(--gray);font-size:0.78rem">unscored</span>'}
+        </td>
+      </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// Source filter pills
+document.querySelectorAll('#source-filter .pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('#source-filter .pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    loadSignals(pill.dataset.source);
+  });
+});
+
+// ── Runs tab ───────────────────────────────────────────────────────────────────
+async function loadRuns() {
+  const tbody = document.getElementById('runs-body');
+  try {
+    const res = await fetch('/api/social/stats');
+    const data = await res.json();
+    const runs = data.recent_runs || [];
+
+    if (!runs.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:20px">No runs yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = runs.map(r => `
+      <tr>
+        <td>#${r.id}</td>
+        <td>${(r.started_at || '').slice(0, 19).replace('T', ' ')}</td>
+        <td><span class="badge ${r.status === 'completed' ? 'badge-green' : r.status === 'failed' ? 'badge-red' : 'badge-amber'}">${r.status}</span></td>
+        <td>${r.signals_collected ?? '—'}</td>
+        <td>${r.signals_relevant ?? '—'}</td>
+      </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ── Trigger run ────────────────────────────────────────────────────────────────
+async function triggerRun(steps) {
+  const status = document.getElementById('run-status');
+  status.className = 'run-status';
+  status.textContent = 'Starting pipeline...';
+  status.style.display = 'block';
+
+  const sources = ['reddit', 'rss', 'youtube', 'web']
+    .filter(s => document.getElementById(`src-${s}`)?.checked)
+    .join(',');
+
+  try {
+    const res = await fetch('/api/social/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sources, steps }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      status.className = 'run-status success';
+      status.textContent = data.message || 'Pipeline started successfully.';
+      setTimeout(loadStats, 5000);
+    } else {
+      status.className = 'run-status error';
+      status.textContent = data.error || 'Failed to start pipeline.';
+    }
+  } catch (e) {
+    status.className = 'run-status error';
+    status.textContent = `Network error: ${e.message}`;
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function badge(text, color) {
+  if (!text) return '';
+  return `<span class="badge badge-${color}">${escHtml(String(text))}</span>`;
+}
+
+function momentumColor(m) {
+  return m === 'rising' ? '#1a7a4a' : m === 'declining' ? '#c0392b' : '#6b7280';
+}
+
+function sentimentBadge(type) {
+  if (!type) return 'badge-gray';
+  if (type === 'positive') return 'badge-green';
+  if (type === 'negative') return 'badge-red';
+  if (type === 'comparison' || type === 'feature_gap') return 'badge-amber';
+  return 'badge-blue';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadStats();
+loadReport();
+</script>
+</body>
+</html>
