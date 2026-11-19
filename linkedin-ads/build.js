@@ -152,7 +152,7 @@ const ads = {
       <img src="${ROUNDEL}" style="height:120px;margin-bottom:44px">
       <div class="eyebrow">Your turn</div>
       <h1 style="font-size:76px">See it answer the questions <span class="g">you ask most.</span></h1>
-      <p style="font-size:32px;line-height:1.4;color:${C.slate};margin-top:28px;max-width:820px">A 20-minute demo built around your venue type and your priorities for 2027.</p>
+      <p style="font-size:32px;line-height:1.4;color:${C.slate};margin-top:28px;max-width:820px">A 30-minute demo built around your venue type and your priorities for 2027.</p>
       <div class="foot" style="width:100%;margin-top:auto">${logo}<span class="pill" style="font-size:26px;padding:20px 38px">Request a demo</span></div>
     </div>`,
   },
